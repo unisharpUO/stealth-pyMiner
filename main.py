@@ -12,7 +12,10 @@ if __name__ == "__main__":
     AddToSystemJournal("stealth-pyMiner script starting...")
 
     AddToSystemJournal("Target your storage container...")
-    _storage = ClientRequestObjectTarget()
+    ClientRequestObjectTarget()
+    while not ClientTargetResponsePresent():
+        Wait(250)
+    _storage = ClientTargetResponse()
 
     #  Miner(homerunebook name, [mining book names], storage container)
     _m = Miner("Home", ["Mining1", "Mining2"], _storage)
@@ -24,12 +27,12 @@ if __name__ == "__main__":
     _m.DropoffOre()
 
     while not Dead():
-        if not _m.DiggingTools:
+        if len(_m.DiggingTools) < 10:
             _m.MakeTools()
 
         for _miningBook in _m.RunebooksMining:
             for _rune in range(0, 15):
-                _miningBook.Recall(_rune)
+                #  _miningBook.Recall(_rune)
                 _m.Mine(10)
                 if Weight() >= (MaxWeight() - 20):
                     _m.DropoffOre()

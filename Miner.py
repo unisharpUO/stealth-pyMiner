@@ -12,6 +12,7 @@ class Miner:
         self._storage = _storage
         self._runebookHome = Runebook(_homeRuneBookName, "recall", "osi")
         self._runebooksMining = []
+        self._minedTiles = []
         for _miningBook in _miningBookNames:
             self._runebooksMining.append(Runebook(_miningBook, "recall", "osi"))
         self._messageFail = "You loosen some rocks| You dig some "
@@ -77,9 +78,9 @@ class Miner:
 
     @property
     def TinkerTools(self):
-        if FindTypesArrayEx([0x1EB8, 0x1EB9], [0xFFFF], [Backpack()], False):
+        if FindTypesArrayEx([0x1EB8, 0x1EB9], [0xFFFF], [Backpack()], True):
             self._tinkerTools = GetFindedList()
-            self._tinkerTools = list(dict.fromkeys(self._diggingTools))
+            self._tinkerTools = list(dict.fromkeys(self._tinkerTools))
             return self._tinkerTools
         else:
             return 0
@@ -90,25 +91,21 @@ class Miner:
 
     def MakeTools(self):
         AddToSystemJournal("Making tools...")
-        if self.TinkerTools:
-            while len(self.TinkerTools) <= 5:
+        if len(self.TinkerTools) > 0:
+            while len(self.TinkerTools) < 5:
                 UseObject(self.TinkerTools[0])
                 Wait(250)
-                WaitGump('23')
+                WaitGump('11')
                 Wait(1500)
         else:
             AddToSystemJournal("No tinker tools found, forced to stop.")
             exit()
         Wait(1000)
-        while True:
+        while len(self.DiggingTools) < 10:
             UseObject(self.TinkerTools[0])
             Wait(250)
-            WaitGump('114')
-            Wait(250)
-            WaitGump('0')
+            WaitGump('24')
             Wait(1500)
-            if self.DiggingTools > 10:
-                break
 
     def DropoffOre(self):
         AddToSystemJournal("Dropping off ore...")
@@ -127,7 +124,7 @@ class Miner:
         _mining = True
         _startTime = datetime.now()
         while Weight() < (MaxWeight() - 20) and _mining:
-            if not self.DiggingTools:
+            if len(self.DiggingTools) == 0:
                 AddToJournal("no digging tools found")
                 self.MakeTools()
             _minableTiles = GetLandTilesArray(GetX(Self()) - _radius, GetY(Self()) - _radius,
@@ -136,6 +133,7 @@ class Miner:
             _minableCoords = []
             for _tile in _minableTiles:
                 _minableCoords.append(tuple((_tile[1], _tile[2])))
+            _minableCoords = [x for x in _minableCoords if x not in self._minedTiles]
             _tree = spatial.KDTree(_minableCoords)
             _query = _tree.query([GetX(Self()), GetY(Self())])  # find next closest coords
             _key = _query[1]
